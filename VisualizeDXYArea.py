@@ -9,4 +9,4 @@ visualize_area_data_by_city(fn_DXYArea, cityNames)
 
 provinceNames = ['湖北省']
 #visualize_area_data_by_province(fn_DXYArea, provinceNames = None)
-#visualize_area_data_by_province(fn_DXYArea, provinceNames)
+visualize_area_data_by_province(fn_DXYArea, provinceNames)

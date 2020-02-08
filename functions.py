@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from datetime import timedelta, date
-import seaborn as sns
+#import seaborn as sns
+import os
 
 mpl.rcParams['font.family'] = 'sans-serif'
 mpl.rcParams['font.sans-serif'] = ['SimHei'] # 'Arial'
@@ -114,6 +115,11 @@ def extract_by_province(df_in, provinceName, calc_increment = True):
     return dfInProvince
 
 def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, savefig = True):
+    
+    path_figure_cities = os.path.join(os.getcwd(), 'figures')
+    if (not os.path.exists(path_figure_cities)):
+        os.mkdir(path_figure_cities)
+
     df_tmp = df_in[df_in['cityName'] == cityName]
 
     # matplotlib date format object
@@ -129,7 +135,9 @@ def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, sa
     ylims = ax.get_ylim()
     ax.set_ylim([0, ylims[1]])
     if savefig:
-        plt.savefig('累计确诊数-{:s}-{:s}.png'.format(provinceName, cityName), dpi = 100)
+        fn_tmp = os.path.join(path_figure_cities, \
+            '累计确诊数-{:s}-{:s}.png'.format(provinceName, cityName))
+        plt.savefig(fn_tmp, dpi = 100)
     if show:
         plt.show()
     plt.close()
@@ -143,7 +151,9 @@ def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, sa
     ylims = ax.get_ylim()
     ax.set_ylim([0, ylims[1]])
     if savefig:
-        plt.savefig('单日新增确诊数-{:s}-{:s}.png'.format(provinceName, cityName), dpi = 300)
+        fn_tmp = os.path.join(path_figure_cities,\
+            '单日新增确诊数-{:s}-{:s}.png'.format(provinceName, cityName))
+        plt.savefig(fn_tmp, dpi = 300)
     if show:
         plt.show()
     plt.close()
