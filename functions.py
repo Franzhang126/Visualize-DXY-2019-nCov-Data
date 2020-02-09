@@ -153,6 +153,48 @@ def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, sa
     if savefig:
         fn_tmp = os.path.join(path_figure_cities,\
             '单日新增确诊数-{:s}-{:s}.png'.format(provinceName, cityName))
+        plt.savefig(fn_tmp, dpi = 100)
+    if show:
+        plt.show()
+    plt.close()
+
+    return
+
+def plot_province_dataframe_by_matplot(df_in, provinceName, show = False, savefig = True):
+    
+    path_figure_cities = os.path.join(os.getcwd(), 'figures')
+    if (not os.path.exists(path_figure_cities)):
+        os.mkdir(path_figure_cities)
+
+    # matplotlib date format object
+    hfmt = mpl.dates.DateFormatter('%m/%d')
+
+    fig, ax = plt.subplots()
+    ax.plot(df_in['updateDate'], df_in['confirmedCount'], '.-', label = provinceName)
+
+    ax.xaxis.set_major_formatter(hfmt)
+    plt.legend()
+    #plt.xlabel('日期')
+    plt.ylabel('累计确诊数')
+    ylims = ax.get_ylim()
+    ax.set_ylim([0, ylims[1]])
+    if savefig:
+        fn_tmp = '累计确诊数-{:s}.png'.format(provinceName)
+        plt.savefig(fn_tmp, dpi = 300)
+    if show:
+        plt.show()
+    plt.close()
+
+    fig, ax = plt.subplots()
+    ax.plot(df_in['updateDate'], df_in['confirmedIncrement'], '.-', label = provinceName)
+
+    ax.xaxis.set_major_formatter(hfmt)
+    plt.legend()
+    plt.ylabel('单日新增确诊数')
+    ylims = ax.get_ylim()
+    ax.set_ylim([0, ylims[1]])
+    if savefig:
+        fn_tmp = '单日新增确诊数-{:s}.png'.format(provinceName)
         plt.savefig(fn_tmp, dpi = 300)
     if show:
         plt.show()
@@ -236,5 +278,22 @@ def visualize_area_data_by_province(fn_csv, provinceNames = None):
         for iCity in range(nCity):
             print('Plotting {:s} {:s}'.format(provinceNames[i], cityNames[iCity]))
             plot_city_dataset_by_matplot(df_tmp, provinceNames[i], cityNames[iCity])
+
+        dates = df_tmp['updateDate'].unique()
+        nDate = len(dates)
+        confirmedSumInProvince = np.zeros([nDate], dtype = 'int')
+        incrementSumInProvince = np.zeros([nDate], dtype = 'int')
+
+        for iDate in range(nDate):
+            dfInDay_tmp = df_tmp[df_tmp['updateDate'] == dates[iDate]]
+            confirmedSumInProvince[iDate] = dfInDay_tmp['city_confirmedCount'].sum()
+            incrementSumInProvince[iDate] = dfInDay_tmp['confirmedIncrement'].sum()
+
+        dfProvince_tmp = pd.DataFrame({'provinceName': provinceNames[i], \
+        	'confirmedCount': confirmedSumInProvince, \
+        	'confirmedIncrement': incrementSumInProvince, 'updateDate': dates})
+        dfProvince_tmp = dfProvince_tmp.sort_values(by='updateDate')
+        #print(dfProvince_tmp)
+        plot_province_dataframe_by_matplot(dfProvince_tmp, provinceNames[i])
     return
 
