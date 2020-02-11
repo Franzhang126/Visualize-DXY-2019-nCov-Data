@@ -68,16 +68,27 @@ def select_record_until_certain_time_on_each_day(dat_in, hour_target = 12, minut
     
     return dat_in.iloc[indices_tmp, :]
 
-def extract_by_city(df_in, cityName, calc_increment = True, print = False):
+def extract_by_city(df_in, cityName, calc_increment = True, debug = False):
     df_1 = df_in[df_in['cityName'] == cityName]
 
-    df_2 = df_1.iloc[::-1, [0,1,6,7,8,9,10]]
-    #print(df_2.columns)
-    #print(df_2)
+    if debug:
+        print(df_1.columns)
+    subset_labels = ['provinceName', 'cityName',
+       'city_confirmedCount', 'city_suspectedCount', 'city_curedCount',
+       'city_deadCount', 'updateTime']
+    indices = [df_1.columns.get_loc(egg) for egg in subset_labels]
+    if debug:
+        print(indices)
+
+    df_2 = df_1.iloc[::-1, indices]
+    if debug:
+        print(df_2.columns)
+        #print(df_2)
 
     df_3 = select_record_until_certain_time_on_each_day(df_2)
-    #print(df_3.columns)
-    #print(df_3)
+    if debug:
+        #print(df_3.columns)
+        print(df_3)
 
     datetimes = pd.to_datetime(df_3.loc[:, 'updateTime'])
 
@@ -87,13 +98,31 @@ def extract_by_city(df_in, cityName, calc_increment = True, print = False):
     df_4.loc[:, 'updateDate'] = dates
     
     if calc_increment:
-        df_4['confirmedIncrement'] = df_4['city_confirmedCount']
-        df_4.iloc[0, 7] = 0
+        df_4['city_confirmedCountIncrement'] = df_4['city_confirmedCount']
+        idx_tmp1 = df_4.columns.get_loc('city_confirmedCountIncrement')
+        idx_tmp2 = df_4.columns.get_loc('city_confirmedCount')
+        df_4.iloc[0, idx_tmp1] = 0
         if df_4.shape[0] > 1:
             for i_row in range(1, df_4.shape[0]):
-                df_4.iloc[i_row, 7] = df_4.iloc[i_row, 2] - df_4.iloc[i_row - 1, 2]
+                df_4.iloc[i_row, idx_tmp1] = df_4.iloc[i_row, idx_tmp2] - df_4.iloc[i_row - 1, idx_tmp2]
+
+        df_4['city_curedCountIncrement'] = df_4['city_curedCount']
+        idx_tmp1 = df_4.columns.get_loc('city_curedCountIncrement')
+        idx_tmp2 = df_4.columns.get_loc('city_curedCount')
+        df_4.iloc[0, idx_tmp1] = 0
+        if df_4.shape[0] > 1:
+            for i_row in range(1, df_4.shape[0]):
+                df_4.iloc[i_row, idx_tmp1] = df_4.iloc[i_row, idx_tmp2] - df_4.iloc[i_row - 1, idx_tmp2]
+
+        df_4['city_deadCountIncrement'] = df_4['city_deadCount']
+        idx_tmp1 = df_4.columns.get_loc('city_deadCountIncrement')
+        idx_tmp2 = df_4.columns.get_loc('city_deadCount')
+        df_4.iloc[0, idx_tmp1] = 0
+        if df_4.shape[0] > 1:
+            for i_row in range(1, df_4.shape[0]):
+                df_4.iloc[i_row, idx_tmp1] = df_4.iloc[i_row, idx_tmp2] - df_4.iloc[i_row - 1, idx_tmp2]
                 
-    if print:
+    if debug:
         print(df_4)
     
     return df_4
@@ -143,7 +172,7 @@ def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, sa
     plt.close()
 
     fig, ax = plt.subplots()
-    ax.plot(df_tmp['updateDate'], df_tmp['confirmedIncrement'], '.-', label = cityName)
+    ax.plot(df_tmp['updateDate'], df_tmp['city_confirmedCountIncrement'], '.-', label = cityName)
 
     ax.xaxis.set_major_formatter(hfmt)
     plt.legend()
@@ -169,36 +198,34 @@ def plot_province_dataframe_by_matplot(df_in, provinceName, show = False, savefi
     # matplotlib date format object
     hfmt = mpl.dates.DateFormatter('%m/%d')
 
-    fig, ax = plt.subplots()
-    ax.plot(df_in['updateDate'], df_in['confirmedCount'], '.-', label = provinceName)
+    columnNames = ['province_confirmedCount', 'province_confirmedCountIncrement', \
+        'province_curedCount', 'province_curedCountIncrement', \
+        'province_deadCount', 'province_deadCountIncrement']
+    columnChineseNames = ['累计确诊数', '单日新增确诊数', '累计治愈数', \
+        '单日新增治愈数', '累计死亡数', '单日新增死亡数']
 
-    ax.xaxis.set_major_formatter(hfmt)
-    plt.legend()
-    #plt.xlabel('日期')
-    plt.ylabel('累计确诊数')
-    ylims = ax.get_ylim()
-    ax.set_ylim([0, ylims[1]])
-    if savefig:
-        fn_tmp = '累计确诊数-{:s}.png'.format(provinceName)
-        plt.savefig(fn_tmp, dpi = 300)
-    if show:
-        plt.show()
-    plt.close()
+    nColumnName = len(columnNames)
+    for iCol in range(nColumnName):
+        fig, ax = plt.subplots()
+        ax.plot(df_in['updateDate'], df_in[columnNames[iCol]], '.-', label = provinceName)
 
-    fig, ax = plt.subplots()
-    ax.plot(df_in['updateDate'], df_in['confirmedIncrement'], '.-', label = provinceName)
+        ax.xaxis.set_major_formatter(hfmt)
+        plt.legend()
+        #plt.xlabel('日期')
+        plt.ylabel(columnChineseNames[iCol])
+        ylims = ax.get_ylim()
+        ax.set_ylim([0, ylims[1]])
 
-    ax.xaxis.set_major_formatter(hfmt)
-    plt.legend()
-    plt.ylabel('单日新增确诊数')
-    ylims = ax.get_ylim()
-    ax.set_ylim([0, ylims[1]])
-    if savefig:
-        fn_tmp = '单日新增确诊数-{:s}.png'.format(provinceName)
-        plt.savefig(fn_tmp, dpi = 300)
-    if show:
-        plt.show()
-    plt.close()
+        # rotates and right aligns the x labels, and moves the bottom of the
+        # axes up to make room for them
+        fig.autofmt_xdate()
+
+        if savefig:
+            fn_tmp = '{:s}-{:s}.png'.format(columnChineseNames[iCol], provinceName)
+            plt.savefig(fn_tmp, dpi = 300)
+        if show:
+            plt.show()
+        plt.close()
 
     return
 
@@ -208,41 +235,40 @@ def plot_datasets_by_matplot(dat_in, cityNames, show = False, savefig = True):
     # matplotlib date format object
     hfmt = mpl.dates.DateFormatter('%m/%d')
 
-    fig, ax = plt.subplots()
-    for i in range(nDat):
-        df_tmp = dat_in[i]
-        ax.plot(df_tmp['updateDate'], df_tmp['city_confirmedCount'], '.-', label = cityNames[i])
+    columnNames = ['city_confirmedCount', 'city_confirmedCountIncrement', \
+        'city_curedCount', 'city_curedCountIncrement', \
+        'city_deadCount', 'city_deadCountIncrement']
+    columnChineseNames = ['累计确诊数', '单日新增确诊数', '累计治愈数', \
+        '单日新增治愈数', '累计死亡数', '单日新增死亡数']
 
-    ax.xaxis.set_major_formatter(hfmt)
-    plt.legend()
-    #plt.xlabel('日期')
-    plt.ylabel('累计确诊数')
-    ylims = ax.get_ylim()
-    ax.set_ylim([0, ylims[1]])
-    if savefig:
-        plt.savefig('累计确诊数.png', dpi = 300)
-    if show:
-        plt.show()
-    plt.close()
+    nColumnName = len(columnNames)
+    for iCol in range(nColumnName):
+        fig, ax = plt.subplots()
+        for i in range(nDat):
+            df_tmp = dat_in[i]
+            ax.plot(df_tmp['updateDate'], df_tmp[columnNames[iCol]], '.-', label = cityNames[i])
 
-    fig, ax = plt.subplots()
-    for i in range(nDat):
-        df_tmp = dat_in[i]
-        ax.plot(df_tmp['updateDate'], df_tmp['confirmedIncrement'], '.-', label = cityNames[i])
+        ax.xaxis.set_major_formatter(hfmt)
+        plt.legend()
+        #plt.xlabel('日期')
+        plt.ylabel(columnChineseNames[iCol])
+        ylims = ax.get_ylim()
+        ax.set_ylim([0, ylims[1]])
 
-    ax.xaxis.set_major_formatter(hfmt)
-    plt.legend()
-    plt.ylabel('单日新增确诊数')
-    ylims = ax.get_ylim()
-    ax.set_ylim([0, ylims[1]])
-    if savefig:
-        plt.savefig('单日新增确诊数.png', dpi = 300)
-    if show:
-        plt.show()
-    plt.close()
+        # rotates and right aligns the x labels, and moves the bottom of the
+        # axes up to make room for them
+        fig.autofmt_xdate()
+        
+        if savefig:
+            plt.savefig(columnChineseNames[iCol]+'.png', dpi = 300)
+        if show:
+            plt.show()
+        plt.close()
     
     if savefig:
-        print('已保存趋势图至本目录：\n1.累计确诊数.png\n2.单日新增确诊数.png')
+        print('已保存趋势图至本目录：')
+        for iCol in range(nColumnName):
+            print('{:d}. {:s}.png'.format(iCol+1, columnChineseNames[iCol]))
 
     return
 
@@ -281,17 +307,27 @@ def visualize_area_data_by_province(fn_csv, provinceNames = None):
 
         dates = df_tmp['updateDate'].unique()
         nDate = len(dates)
-        confirmedSumInProvince = np.zeros([nDate], dtype = 'int')
-        incrementSumInProvince = np.zeros([nDate], dtype = 'int')
-
-        for iDate in range(nDate):
-            dfInDay_tmp = df_tmp[df_tmp['updateDate'] == dates[iDate]]
-            confirmedSumInProvince[iDate] = dfInDay_tmp['city_confirmedCount'].sum()
-            incrementSumInProvince[iDate] = dfInDay_tmp['confirmedIncrement'].sum()
 
         dfProvince_tmp = pd.DataFrame({'provinceName': provinceNames[i], \
-        	'confirmedCount': confirmedSumInProvince, \
-        	'confirmedIncrement': incrementSumInProvince, 'updateDate': dates})
+            'updateDate': dates})
+
+        columnNamesForSum = ['confirmedCount', 'confirmedCountIncrement', \
+            'curedCount', 'curedCountIncrement', 'deadCount', 'deadCountIncrement']
+
+        for iCol in range(len(columnNamesForSum)):
+            columnName = columnNamesForSum[iCol]
+            cityColumnName = 'city_'+columnName
+            provinceColumnName = 'province_'+columnName
+
+            sumInProvince = np.zeros([nDate], dtype = 'int')
+
+            for iDate in range(nDate):
+                dfInDay_tmp = df_tmp[df_tmp['updateDate'] == dates[iDate]]                
+                sumInProvince[iDate] = dfInDay_tmp[cityColumnName].sum()
+
+
+            dfProvince_tmp[provinceColumnName] = sumInProvince
+
         dfProvince_tmp = dfProvince_tmp.sort_values(by='updateDate')
         #print(dfProvince_tmp)
         plot_province_dataframe_by_matplot(dfProvince_tmp, provinceNames[i])

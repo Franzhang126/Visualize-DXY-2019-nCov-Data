@@ -12,4 +12,4 @@ provinceNames = ['湖北省']
 visualize_area_data_by_province(fn_DXYArea, provinceNames)
 
 # 绘制所有省份的趋势图
-visualize_area_data_by_province(fn_DXYArea)
+#visualize_area_data_by_province(fn_DXYArea)
