@@ -163,6 +163,11 @@ def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, sa
     plt.ylabel('累计确诊数')
     ylims = ax.get_ylim()
     ax.set_ylim([0, ylims[1]])
+
+    # rotates and right aligns the x labels, and moves the bottom of the
+    # axes up to make room for them
+    fig.autofmt_xdate()
+
     if savefig:
         fn_tmp = os.path.join(path_figure_cities, \
             '累计确诊数-{:s}-{:s}.png'.format(provinceName, cityName))
@@ -179,6 +184,11 @@ def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, sa
     plt.ylabel('单日新增确诊数')
     ylims = ax.get_ylim()
     ax.set_ylim([0, ylims[1]])
+
+    # rotates and right aligns the x labels, and moves the bottom of the
+    # axes up to make room for them
+    fig.autofmt_xdate()
+    
     if savefig:
         fn_tmp = os.path.join(path_figure_cities,\
             '单日新增确诊数-{:s}-{:s}.png'.format(provinceName, cityName))
