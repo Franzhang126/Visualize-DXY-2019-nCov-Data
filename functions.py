@@ -256,7 +256,7 @@ def plot_datasets_by_matplot(dat_in, cityNames, show = False, savefig = True):
         fig, ax = plt.subplots()
         for i in range(nDat):
             df_tmp = dat_in[i]
-            ax.plot(df_tmp['updateDate'], df_tmp[columnNames[iCol]], '.-', label = cityNames[i])
+            ax.plot(df_tmp['updateDate'], df_tmp[columnNames[iCol]], '.-', label = cityNames[i]+'(最新值 {:d})'.format(df_tmp[columnNames[iCol]].iloc[-1]))
 
         ax.xaxis.set_major_formatter(hfmt)
         plt.legend()
