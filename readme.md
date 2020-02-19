@@ -9,6 +9,7 @@ The daily increment will be calculated and plotted so that we are aware of the t
 
 The data is provided by *BlankerL* at his repository [DXY-COVID-19-Data](https://github.com/BlankerL/DXY-COVID-19-Data).
 
+<img src="单日新增确诊数最严重城市_2020_02_19.png" width=400 />
 <img src="单日新增确诊数.png" width=400 />
 <img src="单日新增确诊数-湖北省.png" width=400 />
 <img src="单日新增死亡数-湖北省.png" width=400 />

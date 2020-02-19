@@ -7,7 +7,7 @@ from datetime import timedelta, date
 import os
 
 mpl.rcParams['font.family'] = 'sans-serif'
-mpl.rcParams['font.sans-serif'] = ['SimHei'] # 'Arial'
+mpl.rcParams['font.sans-serif'] = ['Microsoft YaHei'] # 'Arial', 'SimHei'
 
 mpl.rcParams['xtick.labelsize'] = 12
 mpl.rcParams['ytick.labelsize'] = 12
@@ -18,6 +18,16 @@ mpl.rcParams['xtick.direction'] = 'in'
 mpl.rcParams['ytick.direction'] = 'in'
 
 #sns.set()
+
+def autolabel(rects, ax):
+    """Attach a text label above each bar in *rects*, displaying its height."""
+    for rect in rects:
+        height = rect.get_height()
+        ax.annotate('{}'.format(height),
+                    xy=(rect.get_x() + rect.get_width() / 2, height),
+                    xytext=(0, 3),  # 3 points vertical offset
+                    textcoords="offset points",
+                    ha='center', va='bottom')
 
 def select_record_until_certain_time_in_one_day(times_in, hour_target, minute_target):
     deltas = [[egg[0], timedelta(hours = hour_target - egg[1], minutes = minute_target - egg[2]).seconds] for egg in times_in]
@@ -33,7 +43,11 @@ def select_record_until_certain_time_in_one_day(times_in, hour_target, minute_ta
     
     return deltas[i2_min_tmp, 0]
 
-def select_record_until_certain_time_on_each_day(dat_in, hour_target = 12, minute_target = 0, key = 'updateTime'):
+def select_record_until_certain_time_on_each_day(dat_in, hour_target = 15, minute_target = 0, key = 'updateTime'):
+    '''
+    There may be multiple record for the city in one day.
+    We select the latest record until our target moment (at hour_target:minute_target) on that day.
+    '''
     indices_tmp = []
     
     datetime_old = pd.to_datetime(dat_in.iat[0, 6])
@@ -83,7 +97,7 @@ def extract_by_city(df_in, cityName, calc_increment = True, debug = False):
     df_2 = df_1.iloc[::-1, indices]
     if debug:
         print(df_2.columns)
-        #print(df_2)
+        print(df_2.to_string())
 
     df_3 = select_record_until_certain_time_on_each_day(df_2)
     if debug:
@@ -155,7 +169,8 @@ def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, sa
     hfmt = mpl.dates.DateFormatter('%m/%d')
 
     fig, ax = plt.subplots()
-    ax.plot(df_tmp['updateDate'], df_tmp['city_confirmedCount'], '.-', label = cityName)
+    x_tmp, y_tmp = df_tmp['updateDate'], df_tmp['city_confirmedCount']
+    ax.plot(x_tmp, y_tmp, '.-', label = cityName + '(最新值 {:d})'.format(y_tmp.iloc[-1]))
 
     ax.xaxis.set_major_formatter(hfmt)
     plt.legend()
@@ -177,7 +192,8 @@ def plot_city_dataset_by_matplot(df_in, provinceName, cityName, show = False, sa
     plt.close()
 
     fig, ax = plt.subplots()
-    ax.plot(df_tmp['updateDate'], df_tmp['city_confirmedCountIncrement'], '.-', label = cityName)
+    x_tmp, y_tmp = df_tmp['updateDate'], df_tmp['city_confirmedCountIncrement']
+    ax.plot(x_tmp, y_tmp, '.-', label = cityName + '(最新值 {:d})'.format(y_tmp.iloc[-1]))
 
     ax.xaxis.set_major_formatter(hfmt)
     plt.legend()
@@ -282,6 +298,26 @@ def plot_datasets_by_matplot(dat_in, cityNames, show = False, savefig = True):
 
     return
 
+def plot_most_serious_cities(df_in, by, fn_pre, ylabel, date_in, num_max = 10):
+    df_tmp = df_in.sort_values(by = by, ascending = False)
+    cityNames = df_tmp['cityName'][0:num_max]
+    values = df_tmp[by][0:num_max]
+    #print(cityNames)
+    #print(values)
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(cityNames, values)
+    autolabel(rects1, ax)
+    plt.ylabel(ylabel)
+    title_tmp = '{:s}({:04d}-{:02d}-{:02d})'.format(fn_pre, \
+        date_in.year, date_in.month, date_in.day)
+    fn_tmp = '{:s}_{:04d}_{:02d}_{:02d}.png'.format(\
+        fn_pre, date_in.year, date_in.month, date_in.day)
+    plt.title(title_tmp)
+    plt.savefig(fn_tmp, dpi = 300)
+    plt.close()
+    return
+
 def visualize_area_data_by_city(fn_csv, cityNames):
     df_orig = pd.read_csv(fn_csv)
 
@@ -303,10 +339,13 @@ def visualize_area_data_by_province(fn_csv, provinceNames = None):
         provinceNames = df_orig['provinceName'].unique()
     nProvince = len(provinceNames)
 
-    datasets = []
+    dfLatestDay = []
+    latestDays = []
+
+    #datasets = []
     for i in range(nProvince):
         df_tmp = extract_by_province(df_orig, provinceNames[i])
-        datasets.append(df_tmp)
+        #datasets.append(df_tmp)
 
         cityNames = df_tmp['cityName'].unique()
         nCity = len(cityNames)
@@ -317,6 +356,15 @@ def visualize_area_data_by_province(fn_csv, provinceNames = None):
 
         dates = df_tmp['updateDate'].unique()
         nDate = len(dates)
+
+        # Extract the city data on the latest day
+        latestDay = dates.max()
+        latestDays.append(latestDay)
+        dfLatestDayInProvince = df_tmp[df_tmp['updateDate'] == latestDay]
+        #print(dfLatestDayInProvince.to_string())
+        dfLatestDay.append(dfLatestDayInProvince)
+
+        # Assemble the time history of the provinces from the cities'.
 
         dfProvince_tmp = pd.DataFrame({'provinceName': provinceNames[i], \
             'updateDate': dates})
@@ -341,5 +389,13 @@ def visualize_area_data_by_province(fn_csv, provinceNames = None):
         dfProvince_tmp = dfProvince_tmp.sort_values(by='updateDate')
         #print(dfProvince_tmp)
         plot_province_dataframe_by_matplot(dfProvince_tmp, provinceNames[i])
+
+    dfLatestDay = pd.concat(dfLatestDay)
+    #print(dfLatestDay.to_string())
+
+    latestDays = pd.Series(latestDays)
+    latestDay = latestDays.max()
+    plot_most_serious_cities(dfLatestDay, 'city_confirmedCountIncrement', \
+        '单日新增确诊数最严重城市', '单日新增确诊数', latestDay)
     return
 
