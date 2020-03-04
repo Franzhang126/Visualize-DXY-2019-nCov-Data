@@ -87,7 +87,7 @@ def select_record_until_certain_time_in_one_day(times_in, hour_target, minute_ta
     
     return deltas[i2_min_tmp, 0]
 
-def select_record_until_certain_time_on_each_day(dat_in, hour_target = 15, minute_target = 0, key = 'updateTime'):
+def select_record_until_certain_time_on_each_day(dat_in, hour_target = 23, minute_target = 0, key = 'updateTime'):
     '''
     There may be multiple record for the city in one day.
     We select the latest record until our target moment (at hour_target:minute_target) on that day.
@@ -392,7 +392,11 @@ def visualize_area_data_by_city(fn_csv, cityNames):
         datasets.append(df_tmp)
 
     plot_datasets_by_matplot(datasets, cityNames)
-    return
+
+    df_cities = pd.concat(datasets)
+    # write to csv
+    df_cities.to_csv('subset_cities.csv')
+    return df_cities
 
 def visualize_area_data_by_province(fn_csv, provinceNames = None, debug = False):
     df_orig = pd.read_csv(fn_csv)
