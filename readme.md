@@ -3,7 +3,17 @@
 将 *BlankerL* 提供的[2019新型冠状病毒疫情时间序列数据仓库](https://github.com/BlankerL/DXY-COVID-19-Data)进行可视化。目前为自用，可提供市级的确诊数、治愈数、死亡数时程线，（各大网站只提供全国确诊数的时程线）。
 目前提供中文、英文两种输出。
 
-Visualize the time-history of important daily counts in COVID-19.
+Visualize the time-history of important daily counts in COVID-19 **in China**.
+The data is stored in another author's repository: https://github.com/BlankerL/DXY-COVID-19-Data ,
+which is gathered by the website Ding Xiang Yuan focusing on epidemic situation in China.
+
+This visualization script is **not** for COVID-19 **worldwide**. 
+
+**If you are looking for data and visualization outside of China, maybe you can try these**:
+* GIS for worldwide situation provide by JHU: https://gisanddata.maps.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6
+* North America visualization provided by "一亩三分地": https://coronavirus.1point3acres.com/
+* Worldwide data and visualization compiled by Chinese media ThePaper.cn: https://github.com/839-studio/novel-coronavirus-updates
+
 However, the features are quite limited by now as it is for my personal use. (I live in the epicenter of the pandemic, Wuhan City, Hubei Province. I care about the trend.)
 
 The daily increment will be calculated and plotted so that we are aware of the trend.
